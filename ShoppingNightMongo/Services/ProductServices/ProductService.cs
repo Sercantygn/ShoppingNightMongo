@@ -1,17 +1,32 @@
-﻿using ShoppingNightMongo.Dtos.ProductDtos;
+﻿using AutoMapper;
+using MongoDB.Driver;
+using ShoppingNightMongo.Dtos.ProductDtos;
+using ShoppingNightMongo.Entities;
+using ShoppingNightMongo.Settings;
 
 namespace ShoppingNightMongo.Services.ProductServices
 {
     public class ProductService : IProductService
     {
-        public Task CreateProductDto(CreateProductDto createProductDto)
+        private readonly IMapper _mapper;
+        private readonly IMongoCollection<Product> _productCollection;
+
+        public ProductService(IMapper mapper,IDatabaseSetting _databaseSettings)
         {
-            throw new NotImplementedException();
+            var client = new MongoClient(_databaseSettings.ConnectionString);
+            var database = client.GetDatabase(_databaseSettings.DatabaseName);
+            _productCollection = database.GetCollection<Product>(_databaseSettings.ProductCollectionName);
+            _mapper = mapper;
+        }
+        public async Task CreateProductDto(CreateProductDto createProductDto)
+        {
+           var value=_mapper.Map<Product>(createProductDto);
+            await _productCollection.InsertOneAsync(value);
         }
 
-        public Task DeleteProductDto(string Id)
+        public async Task DeleteProductDto(string Id)
         {
-            throw new NotImplementedException();
+           await _productCollection.DeleteOneAsync(x=>x.ProductId==Id);
         }
 
         public Task<GetProductByIdDto> GetProductByIdAsync(string Id)
@@ -24,9 +39,10 @@ namespace ShoppingNightMongo.Services.ProductServices
             throw new NotImplementedException();
         }
 
-        public Task UpdateProductDto(UpdateProductDto updateProductDto)
+        public async Task UpdateProductDto(UpdateProductDto updateProductDto)
         {
-            throw new NotImplementedException();
+           var value=_mapper.Map<Product>(updateProductDto);
+            await _productCollection.FindOneAndReplaceAsync(x => x.ProductId == updateProductDto.ProductId, value);
         }
     }
 }

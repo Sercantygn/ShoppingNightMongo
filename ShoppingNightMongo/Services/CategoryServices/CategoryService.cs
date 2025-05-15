@@ -1,19 +1,32 @@
-﻿using ShoppingNightMongo.Dtos.CategoryDtos;
+﻿using AutoMapper;
+using MongoDB.Driver;
+using ShoppingNightMongo.Dtos.CategoryDtos;
+using ShoppingNightMongo.Entities;
+using ShoppingNightMongo.Settings;
 
 namespace ShoppingNightMongo.Services.CategoryServices
 {
     public class CategoryService : ICategoryService
     {
-        public Task CreateCategoryAsync(CreateCategoryDto createCategoryDto)
-        {
-            throw new NotImplementedException();
-        }
+        private readonly IMapper _mapper;
+        private readonly IMongoCollection<Category> _categoryCollection;
 
-        public Task DeleteCategoryDto(string id)
+        public CategoryService(IMapper mapper,IDatabaseSetting _databaseSettings)
         {
-            throw new NotImplementedException();
+            var clint = new MongoClient(_databaseSettings.ConnectionString);
+            var database = clint.GetDatabase(_databaseSettings.DatabaseName);
+            _categoryCollection = database.GetCollection<Category>(_databaseSettings.CategoryCollectionName);
+            _mapper = mapper;
         }
-
+        public async Task CreateCategoryAsync(CreateCategoryDto createCategoryDto)
+        {
+           var value=_mapper.Map<Category>(createCategoryDto);
+            await _categoryCollection.InsertOneAsync(value);
+        }
+        public async Task DeleteCategoryDto(string id)
+        {
+            await _categoryCollection.DeleteOneAsync(id);
+        }
         public Task<GetCategoryByIdDto> GetCategoryByIdAsync(string id)
         {
             throw new NotImplementedException();
@@ -24,9 +37,10 @@ namespace ShoppingNightMongo.Services.CategoryServices
             throw new NotImplementedException();
         }
 
-        public Task UpdateCategoryDto(UpdateCategoryDto UpdateCategoryDto)
+        public async Task UpdateCategoryDto(UpdateCategoryDto UpdateCategoryDto)
         {
-            throw new NotImplementedException();
+           var value = _mapper.Map<Category>(UpdateCategoryDto);
+            await _categoryCollection.FindOneAndReplaceAsync(x=>x.CategoryId==UpdateCategoryDto.CategoryId, value);
         }
     }
 }
