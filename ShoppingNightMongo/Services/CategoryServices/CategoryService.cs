@@ -27,9 +27,16 @@ namespace ShoppingNightMongo.Services.CategoryServices
         {
             await _categoryCollection.DeleteOneAsync(id);
         }
-        public Task<GetCategoryByIdDto> GetCategoryByIdAsync(string id)
+        public async Task<List<ResultCategoryDto>> GetAllCategoryAsync()
         {
-            throw new NotImplementedException();
+            var value = await _categoryCollection.Find(x => true).ToListAsync();
+            return _mapper.Map<List<ResultCategoryDto>>(value);
+            
+        }
+        public async Task<GetCategoryByIdDto> GetCategoryByIdAsync(string id)
+        {
+            var value = await _categoryCollection.Find(x => x.CategoryId == id).FirstOrDefaultAsync();
+            return _mapper.Map<GetCategoryByIdDto>(value);
         }
 
         public Task<List<ResultCategoryDto>> GetResultCategoryDtosAsync()

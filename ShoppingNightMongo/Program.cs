@@ -1,6 +1,27 @@
-var builder = WebApplication.CreateBuilder(args);
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using ShoppingNightMongo.Services.CategoryServices;
+using ShoppingNightMongo.Services.CustomerService;
+using ShoppingNightMongo.Services.ProductServices;
+using ShoppingNightMongo.Settings;
+using System.Reflection;
 
+var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
+var vuilder = WebApplication.CreateBuilder(args);
+builder.Services.AddScoped<ICategoryService,CategoryService>();
+builder.Services.AddScoped<ICustomerService,CustomerService>();
+builder.Services.AddScoped<IProductService,ProductService>();
+
+builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
+
+builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection("DatabaseSettingKeys"));
+
+builder.Services.AddScoped<IDatabaseSetting>(sp =>
+{
+    return sp.GetRequiredService<IOptions<DatabaseSettings>>().Value;
+});
+
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
